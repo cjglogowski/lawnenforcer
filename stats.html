@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lawn Enforcer — Stats</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .stats-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .stats-header h1 { font-size: 1.2rem; font-weight: 700; flex: 1; }
+
+    .month-picker {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .month-picker label { font-size: 0.85rem; font-weight: 600; color: #555; }
+    .month-picker input[type="month"] {
+      font-family: inherit;
+      font-size: 0.875rem;
+      padding: 7px 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: white;
+      color: #1a1a1a;
+      outline: none;
+      cursor: pointer;
+    }
+    .month-picker input[type="month"]:focus { border-color: #4a9e6b; }
+
+    .stats-jobs { display: flex; flex-direction: column; gap: 8px; }
+    .stats-job-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: white;
+      border-radius: 10px;
+      border: 1px solid #ebebeb;
+      font-size: 0.875rem;
+    }
+    .stats-job-left { display: flex; flex-direction: column; gap: 2px; }
+    .stats-job-name { font-weight: 600; }
+    .stats-job-date { font-size: 0.78rem; color: #888; }
+    .stats-job-desc { font-size: 0.82rem; color: #555; }
+
+    .empty { text-align: center; color: #bbb; font-size: 0.9rem; padding: 32px 0; }
+  </style>
+</head>
+<body>
+  <div id="app">
+
+    <div class="stats-header">
+      <a href="index.html" class="btn-ghost" style="text-decoration:none;font-size:0.85rem;padding:7px 12px;">← Back</a>
+      <h1>Monthly Stats</h1>
+    </div>
+
+    <div class="month-picker">
+      <label for="month-input">Month</label>
+      <input type="month" id="month-input" />
+    </div>
+
+    <!-- Mowing summary -->
+    <div class="stats-section-label">Mowing</div>
+    <div class="summary-bar" style="margin-bottom:20px;">
+      <div class="summary-card">
+        <div class="label">Jobs</div>
+        <div class="value" id="s-jobs">—</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Earned</div>
+        <div class="value" id="s-collected">—</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Outstanding</div>
+        <div class="value" id="s-outstanding">—</div>
+      </div>
+    </div>
+
+    <div class="stats-jobs" id="stats-job-list">
+      <p class="empty">Loading…</p>
+    </div>
+
+    <!-- Specialty summary -->
+    <div class="stats-section-label" style="margin-top:28px;">Specialty</div>
+    <div class="summary-bar" style="margin-bottom:20px;">
+      <div class="summary-card">
+        <div class="label">Jobs</div>
+        <div class="value" id="s-spec-jobs">—</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Earned</div>
+        <div class="value" id="s-spec-collected">—</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Outstanding</div>
+        <div class="value" id="s-spec-outstanding">—</div>
+      </div>
+    </div>
+
+    <div class="stats-jobs" id="stats-specialty-list">
+      <p class="empty">Loading…</p>
+    </div>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="stats.js"></script>
+</body>
+</html>

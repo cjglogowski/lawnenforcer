@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lawn Enforcer</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div id="app">
+    <!-- Summary bar -->
+    <div class="summary-bar summary-bar-4">
+      <div class="summary-card">
+        <div class="label">Total Jobs</div>
+        <div class="value" id="stat-jobs">—</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Specialty Jobs</div>
+        <div class="value" id="stat-specialty-jobs">—</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Total Collected</div>
+        <div class="value" id="stat-collected">—</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Total Outstanding</div>
+        <div class="value" id="stat-outstanding">—</div>
+      </div>
+    </div>
+
+    <!-- Top bar -->
+    <div class="top-bar">
+      <h1>Customers</h1>
+      <button class="btn-primary" id="btn-show-add">+ Add Customer</button>
+    </div>
+
+    <!-- Add customer form (hidden by default) -->
+    <div class="add-form hidden" id="add-form">
+      <h2>New Customer</h2>
+      <input type="text" id="new-name" placeholder="Name" />
+      <input type="text" id="new-address" placeholder="Address" />
+      <input type="number" id="new-price" placeholder="Price per cut ($)" step="0.01" min="0" />
+      <input type="tel" id="new-phone" placeholder="Phone (optional)" />
+      <input type="email" id="new-email" placeholder="Email (optional)" />
+      <div class="form-actions">
+        <button class="btn-primary" id="btn-save-customer">Save</button>
+        <button class="btn-ghost" id="btn-cancel-add">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Customer list -->
+    <div class="customer-list" id="customer-list">
+      <p class="empty">Loading…</p>
+    </div>
+
+    <!-- Specialty jobs section -->
+    <div class="top-bar" style="margin-top: 28px;">
+      <h1>Specialty Jobs</h1>
+      <button class="btn-primary" id="btn-show-specialty-form">+ Add Job</button>
+    </div>
+
+    <div class="add-form hidden" id="specialty-form">
+      <h2>New Specialty Job</h2>
+      <select id="specialty-customer-select" class="form-select"></select>
+      <input type="text" id="specialty-desc" placeholder="Description" />
+      <input type="number" id="specialty-amount" placeholder="Amount ($)" step="0.01" min="0" />
+      <input type="date" id="specialty-date" />
+      <label class="form-check">
+        <input type="checkbox" id="specialty-paid" /> Paid
+      </label>
+      <div class="form-actions">
+        <button class="btn-primary" id="btn-save-specialty">Save</button>
+        <button class="btn-ghost" id="btn-cancel-specialty">Cancel</button>
+      </div>
+    </div>
+
+    <div class="specialty-list" id="specialty-list">
+      <p class="empty">Loading…</p>
+    </div>
+
+    <!-- Customer detail panel (hidden by default) -->
+    <div class="detail-overlay hidden" id="detail-overlay">
+      <div class="detail-panel" id="detail-panel">
+        <div class="detail-header">
+          <button class="btn-ghost btn-back" id="btn-back">← Back</button>
+          <h2 id="detail-name"></h2>
+        </div>
+        <div class="detail-address" id="detail-address"></div>
+        <div class="detail-stats">
+          <div class="detail-stat">
+            <div class="ds-label">Total Cuts</div>
+            <div class="ds-value" id="detail-cuts">0</div>
+          </div>
+          <div class="detail-stat">
+            <div class="ds-label">Total Paid</div>
+            <div class="ds-value" id="detail-paid">$0</div>
+          </div>
+          <div class="detail-stat">
+            <div class="ds-label">Owed</div>
+            <div class="ds-value" id="detail-owed">$0</div>
+          </div>
+        </div>
+
+        <div class="detail-section-label">Mowing History</div>
+        <div class="job-list" id="job-list">
+          <p class="empty">No jobs yet.</p>
+        </div>
+
+        <div class="detail-section-label" style="margin-top: 20px;">Specialty Jobs</div>
+        <div class="job-list" id="detail-specialty-list">
+          <p class="empty">No specialty jobs.</p>
+        </div>
+
+        <div class="detail-actions">
+          <button class="btn-danger" id="btn-delete-customer">Delete Customer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="app-footer">
+    <a href="stats.html" class="btn-ghost btn-stats">📊 Stats</a>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+</body>
+</html>
