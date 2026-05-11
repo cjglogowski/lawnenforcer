@@ -51,6 +51,25 @@
     .stats-job-desc { font-size: 0.82rem; color: #555; }
 
     .empty { text-align: center; color: #bbb; font-size: 0.9rem; padding: 32px 0; }
+
+    .exp-edit-row { flex-direction: column; align-items: stretch; }
+    .exp-edit-fields { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+    .exp-edit-fields input,
+    .exp-edit-fields select {
+      font-family: inherit;
+      font-size: 0.875rem;
+      padding: 7px 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: #fafafa;
+      color: #1a1a1a;
+      outline: none;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .exp-edit-fields input:focus,
+    .exp-edit-fields select:focus { border-color: #4a9e6b; background: white; }
+    .exp-amount { font-weight: 600; color: #1a1a1a; white-space: nowrap; }
   </style>
 </head>
 <body>
@@ -64,6 +83,7 @@
     <div class="month-picker">
       <label for="month-input">Month</label>
       <input type="month" id="month-input" />
+      <a href="yearly.html" class="btn-ghost" style="text-decoration:none;font-size:0.85rem;padding:7px 12px;white-space:nowrap;">Yearly Overview</a>
     </div>
 
     <!-- Mowing summary -->
@@ -105,6 +125,52 @@
     </div>
 
     <div class="stats-jobs" id="stats-specialty-list">
+      <p class="empty">Loading…</p>
+    </div>
+
+    <!-- Monthly Overview -->
+    <div class="stats-section-label" style="margin-top:28px;">Monthly Overview</div>
+    <div class="summary-bar" style="margin-bottom:24px;">
+      <div class="summary-card">
+        <div class="label">Collected</div>
+        <div class="value" id="s-total-collected">—</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Expenses</div>
+        <div class="value" id="s-total-expenses">—</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Net Income</div>
+        <div class="value" id="s-net-income">—</div>
+      </div>
+    </div>
+
+    <!-- Expenses -->
+    <div class="stats-section-label" style="margin-top:0; margin-bottom:12px;">Expenses</div>
+
+    <div class="add-form hidden" id="expense-add-form">
+      <h2>New Expense</h2>
+      <select id="expense-category" class="form-select">
+        <option value="Mower Fuel">Mower Fuel</option>
+        <option value="Truck Fuel">Truck Fuel</option>
+        <option value="Maintenance">Maintenance</option>
+        <option value="Purchase">Purchase</option>
+        <option value="Other">Other</option>
+      </select>
+      <input type="text" id="expense-desc" placeholder="Description (optional)" />
+      <input type="number" id="expense-amount" placeholder="Amount ($)" step="0.01" min="0" />
+      <input type="date" id="expense-date" />
+      <div class="form-actions">
+        <button class="btn-primary" id="btn-save-expense">Save</button>
+        <button class="btn-ghost" id="btn-cancel-expense">Cancel</button>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+      <button class="btn-primary" id="btn-show-expense-form">+ Add Expense</button>
+    </div>
+
+    <div class="stats-jobs" id="expenses-list">
       <p class="empty">Loading…</p>
     </div>
 

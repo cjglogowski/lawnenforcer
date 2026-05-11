@@ -4,6 +4,10 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const { createClient } = supabase
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
+// ── State ─────────────────────────────────────────────────────────────────────
+let allExpenses      = []
+let editingExpenseId = null
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function fmt(n) {
   return '$' + (parseFloat(n) || 0).toFixed(2)
@@ -30,6 +34,14 @@ function todayMonthValue() {
   return `${y}-${m}`
 }
 
+function todayISO() {
+  const d = new Date()
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
 // ── Load & render ─────────────────────────────────────────────────────────────
 async function loadAndRender(monthValue) {
   const [year, month] = monthValue.split('-').map(Number)
@@ -38,7 +50,7 @@ async function loadAndRender(monthValue) {
   const lastDay    = new Date(year, month, 0)
   const lastDayStr = `${year}-${String(month).padStart(2, '0')}-${String(lastDay.getDate()).padStart(2, '0')}`
 
-  const [{ data: jobs }, { data: specJobs }, { data: customers }] = await Promise.all([
+  const [{ data: jobs }, { data: specJobs }, { data: customers }, { data: expenses }] = await Promise.all([
     db.from('jobs')
       .select('*')
       .gte('mowed_at', firstDay)
@@ -50,11 +62,13 @@ async function loadAndRender(monthValue) {
       .lte('job_date', lastDayStr)
       .order('job_date', { ascending: false }),
     db.from('customers').select('id, name, price_per_cut'),
+    db.from('expenses').select('*').order('expense_date', { ascending: false }),
   ])
 
   const jobList  = jobs      || []
   const specList = specJobs  || []
   const custList = customers || []
+  allExpenses    = expenses  || []
 
   const priceMap = {}
   const nameMap  = {}
@@ -113,6 +127,102 @@ async function loadAndRender(monthValue) {
         </div>`
     }).join('')
   }
+
+  // ── Monthly overview ──
+  const monthExpenses  = allExpenses.filter(e => e.expense_date >= firstDay && e.expense_date <= lastDayStr)
+  const totalExpenses  = monthExpenses.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0)
+  const totalCollected = mowCollected + specCollected
+  const netIncome      = totalCollected - totalExpenses
+
+  document.getElementById('s-total-collected').textContent = fmt(totalCollected)
+  document.getElementById('s-total-expenses').textContent  = fmt(totalExpenses)
+  document.getElementById('s-net-income').textContent      = fmt(netIncome)
+
+  renderExpensesList()
+}
+
+// ── Expenses list ─────────────────────────────────────────────────────────────
+const EXPENSE_CATEGORIES = ['Mower Fuel', 'Truck Fuel', 'Maintenance', 'Purchase', 'Other']
+
+function renderExpensesList() {
+  const container = document.getElementById('expenses-list')
+  if (!allExpenses.length) {
+    container.innerHTML = '<p class="empty">No expenses yet.</p>'
+    return
+  }
+
+  container.innerHTML = allExpenses.map(e => {
+    if (editingExpenseId === e.id) {
+      const catOptions = EXPENSE_CATEGORIES.map(cat =>
+        `<option value="${cat}" ${e.category === cat ? 'selected' : ''}>${cat}</option>`
+      ).join('')
+      return `
+        <div class="stats-job-row exp-edit-row" data-eid="${e.id}">
+          <div class="exp-edit-fields">
+            <select class="exp-edit-cat">${catOptions}</select>
+            <input type="text"   class="exp-edit-desc"   value="${esc(e.description || '')}" placeholder="Description (optional)" />
+            <div style="display:flex;gap:8px;">
+              <input type="number" class="exp-edit-amount" value="${e.amount}" step="0.01" min="0" placeholder="Amount ($)" style="flex:1;" />
+              <input type="date"   class="exp-edit-date"   value="${e.expense_date}" style="flex:1;" />
+            </div>
+            <div class="form-actions" style="margin-top:6px;">
+              <button class="btn-primary exp-save-btn" data-eid="${e.id}">Save</button>
+              <button class="btn-ghost exp-cancel-btn">Cancel</button>
+            </div>
+          </div>
+        </div>`
+    }
+    return `
+      <div class="stats-job-row" data-eid="${e.id}">
+        <div class="stats-job-left">
+          <span class="stats-job-name">${esc(e.category)}</span>
+          ${e.description ? `<span class="stats-job-desc">${esc(e.description)}</span>` : ''}
+          <span class="stats-job-date">${fmtDate(e.expense_date)}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="exp-amount">${fmt(e.amount)}</span>
+          <button class="btn-ghost exp-edit-btn" data-eid="${e.id}" style="font-size:0.72rem;padding:3px 7px;line-height:1.5;">✎</button>
+          <button class="btn-delete-job exp-delete-btn" data-eid="${e.id}" title="Delete">✕</button>
+        </div>
+      </div>`
+  }).join('')
+
+  container.querySelectorAll('.exp-edit-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      editingExpenseId = btn.dataset.eid
+      renderExpensesList()
+    })
+  })
+
+  container.querySelectorAll('.exp-save-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const row    = btn.closest('.exp-edit-row')
+      const cat    = row.querySelector('.exp-edit-cat').value
+      const desc   = row.querySelector('.exp-edit-desc').value.trim()
+      const amount = parseFloat(row.querySelector('.exp-edit-amount').value) || 0
+      const date   = row.querySelector('.exp-edit-date').value || todayISO()
+      btn.disabled = true
+      btn.textContent = 'Saving…'
+      await db.from('expenses').update({ category: cat, description: desc || null, amount, expense_date: date }).eq('id', btn.dataset.eid)
+      editingExpenseId = null
+      await loadAndRender(document.getElementById('month-input').value)
+    })
+  })
+
+  container.querySelectorAll('.exp-cancel-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      editingExpenseId = null
+      renderExpensesList()
+    })
+  })
+
+  container.querySelectorAll('.exp-delete-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      btn.disabled = true
+      await db.from('expenses').delete().eq('id', btn.dataset.eid)
+      await loadAndRender(document.getElementById('month-input').value)
+    })
+  })
 }
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
@@ -120,3 +230,34 @@ const input = document.getElementById('month-input')
 input.value = todayMonthValue()
 input.addEventListener('change', () => loadAndRender(input.value))
 loadAndRender(input.value)
+
+document.getElementById('expense-date').value = todayISO()
+
+document.getElementById('btn-show-expense-form').addEventListener('click', () => {
+  document.getElementById('expense-add-form').classList.remove('hidden')
+  document.getElementById('expense-desc').focus()
+})
+
+document.getElementById('btn-cancel-expense').addEventListener('click', () => {
+  document.getElementById('expense-add-form').classList.add('hidden')
+})
+
+document.getElementById('btn-save-expense').addEventListener('click', async () => {
+  const cat    = document.getElementById('expense-category').value
+  const desc   = document.getElementById('expense-desc').value.trim()
+  const amount = parseFloat(document.getElementById('expense-amount').value) || 0
+  const date   = document.getElementById('expense-date').value || todayISO()
+  if (!amount) { document.getElementById('expense-amount').focus(); return }
+
+  const btn = document.getElementById('btn-save-expense')
+  btn.disabled = true
+  btn.textContent = 'Saving…'
+  await db.from('expenses').insert({ category: cat, description: desc || null, amount, expense_date: date })
+  document.getElementById('expense-add-form').classList.add('hidden')
+  document.getElementById('expense-desc').value   = ''
+  document.getElementById('expense-amount').value = ''
+  document.getElementById('expense-date').value   = todayISO()
+  btn.disabled = false
+  btn.textContent = 'Save'
+  await loadAndRender(input.value)
+})

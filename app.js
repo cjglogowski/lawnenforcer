@@ -19,6 +19,15 @@ async function init() {
   renderCustomerList()
   renderSpecialtySection()
   bindStaticEvents()
+
+  const params = new URLSearchParams(window.location.search)
+  let cid = params.get('customer')
+  if (!cid) cid = localStorage.getItem('openCustomer')
+  if (cid) {
+    localStorage.removeItem('openCustomer')
+    const customer = customers.find(c => c.id === cid)
+    if (customer) openDetail(customer)
+  }
 }
 
 // ── Data loading ──────────────────────────────────────────────────────────────

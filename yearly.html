@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lawn Enforcer — Yearly Overview</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .stats-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .stats-header h1 { font-size: 1.2rem; font-weight: 700; flex: 1; }
+
+    .year-picker {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .year-picker label { font-size: 0.85rem; font-weight: 600; color: #555; }
+    .year-picker select {
+      font-family: inherit;
+      font-size: 0.875rem;
+      padding: 7px 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: white;
+      color: #1a1a1a;
+      outline: none;
+      cursor: pointer;
+    }
+    .year-picker select:focus { border-color: #4a9e6b; }
+
+    .summary-bar-5 { grid-template-columns: repeat(5, 1fr); }
+
+    .cust-breakdown { display: flex; flex-direction: column; gap: 8px; }
+    .cust-breakdown-row {
+      background: white;
+      border-radius: 12px;
+      border: 1px solid #ebebeb;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .cust-breakdown-left { flex: 1; min-width: 0; }
+    .cust-breakdown-name { font-weight: 600; font-size: 0.95rem; display: block; color: inherit; text-decoration: none; }
+    a.cust-breakdown-name:hover { color: #4a9e6b; text-decoration: underline; }
+    .cust-breakdown-meta { font-size: 0.78rem; color: #888; }
+    .cust-breakdown-right { display: flex; gap: 20px; flex-shrink: 0; }
+    .cust-stat { text-align: right; }
+    .cust-stat-label { font-size: 0.65rem; color: #aaa; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
+    .cust-stat-value { font-size: 0.9rem; font-weight: 700; color: #1a1a1a; }
+    .cust-stat-value.owed { color: #c0392b; }
+
+    .stats-jobs { display: flex; flex-direction: column; gap: 8px; }
+    .stats-job-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: white;
+      border-radius: 10px;
+      border: 1px solid #ebebeb;
+      font-size: 0.875rem;
+    }
+    .stats-job-left { display: flex; flex-direction: column; gap: 2px; }
+    .stats-job-name { font-weight: 600; }
+    .stats-job-date { font-size: 0.78rem; color: #888; }
+    .stats-job-desc { font-size: 0.82rem; color: #555; }
+
+    .cat-row {
+      background: white;
+      border-radius: 10px;
+      border: 1px solid #ebebeb;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.875rem;
+    }
+    .cat-name { font-weight: 600; }
+    .cat-meta { font-size: 0.78rem; color: #888; margin-top: 2px; }
+    .cat-total { font-weight: 700; color: #c0392b; font-size: 1rem; }
+    #y-expenses { color: #c0392b; }
+
+    .empty { text-align: center; color: #bbb; font-size: 0.9rem; padding: 32px 0; }
+
+    @media (max-width: 480px) {
+      .summary-bar-5 { grid-template-columns: repeat(2, 1fr); }
+      .cust-breakdown-row { flex-direction: column; align-items: flex-start; }
+      .cust-breakdown-right { flex-wrap: wrap; gap: 12px; }
+      .cust-stat { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+
+    <div class="stats-header">
+      <a href="stats.html" class="btn-ghost" style="text-decoration:none;font-size:0.85rem;padding:7px 12px;">← Back</a>
+      <h1>Yearly Overview</h1>
+    </div>
+
+    <div class="year-picker">
+      <label for="year-input">Year</label>
+      <select id="year-input"></select>
+    </div>
+
+    <div class="summary-bar summary-bar-5" style="margin-bottom:24px;">
+      <div class="summary-card">
+        <div class="label">Total Jobs</div>
+        <div class="value" id="y-jobs">—</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Collected</div>
+        <div class="value" id="y-collected">—</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Outstanding</div>
+        <div class="value" id="y-outstanding">—</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Expenses</div>
+        <div class="value" id="y-expenses">—</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Net Income</div>
+        <div class="value" id="y-net-income">—</div>
+      </div>
+    </div>
+
+    <div class="stats-section-label" style="margin-bottom:10px;">Customer Breakdown</div>
+    <div class="cust-breakdown" id="customer-breakdown">
+      <p class="empty">Loading…</p>
+    </div>
+
+    <div class="stats-section-label" style="margin-top:28px;margin-bottom:10px;">Expenses by Category</div>
+    <div class="stats-jobs" id="category-breakdown">
+      <p class="empty">Loading…</p>
+    </div>
+
+    <div class="stats-section-label" style="margin-top:28px;margin-bottom:10px;">All Expenses</div>
+    <div class="stats-jobs" id="expenses-year-list">
+      <p class="empty">Loading…</p>
+    </div>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="yearly.js"></script>
+</body>
+</html>
