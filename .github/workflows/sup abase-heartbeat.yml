@@ -1,0 +1,31 @@
+name: Supabase Heartbeat
+
+on:
+  schedule:
+    - cron: "0 12 * * 1"   # Every Monday at 12:00 UTC
+    - cron: "0 12 * * 4"   # Every Thursday at 12:00 UTC
+  workflow_dispatch:
+
+jobs:
+  ping:
+    name: Ping Supabase DB
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ping Supabase REST API
+        run: |
+          echo "Pinging Supabase at $(date)..."
+
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X GET "${{ secrets.SUPABASE_URL }}/rest/v1/${{ secrets.SUPABASE_TABLE }}?limit=1" \
+            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}")
+
+          echo "HTTP Response Code: $RESPONSE"
+
+          if [ "$RESPONSE" -ge 200 ] && [ "$RESPONSE" -lt 300 ]; then
+            echo "✅ Ping successful — Supabase project is active."
+          else
+            echo "❌ Ping failed with status $RESPONSE — check your secrets or table name."
+            exit 1
+          fi
