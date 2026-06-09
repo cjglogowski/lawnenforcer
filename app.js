@@ -268,9 +268,10 @@ function openDetail(customer) {
     document.getElementById('detail-name').textContent = ''
     document.getElementById('detail-address').innerHTML = `
       <div class="detail-cust-edit-form">
-        <input type="text" class="dce-name"    value="${esc(customer.name)}"          placeholder="Name" />
-        <input type="text" class="dce-address" value="${esc(customer.address || '')}" placeholder="Address" />
-        <input type="tel"  class="dce-phone"   value="${esc(customer.phone || '')}"   placeholder="Phone" />
+        <input type="text"  class="dce-name"    value="${esc(customer.name)}"          placeholder="Name" />
+        <input type="text"  class="dce-address" value="${esc(customer.address || '')}" placeholder="Address" />
+        <input type="tel"   class="dce-phone"   value="${esc(customer.phone || '')}"   placeholder="Phone" />
+        <input type="email" class="dce-email"   value="${esc(customer.email || '')}"   placeholder="Email" />
         <div class="form-actions" style="margin-top:8px;">
           <button class="btn-primary" id="btn-detail-cust-save">Save</button>
           <button class="btn-ghost"   id="btn-detail-cust-cancel">Cancel</button>
@@ -281,11 +282,12 @@ function openDetail(customer) {
       const name  = document.querySelector('.dce-name').value.trim()
       const addr  = document.querySelector('.dce-address').value.trim()
       const phone = document.querySelector('.dce-phone').value.trim()
+      const email = document.querySelector('.dce-email').value.trim()
       if (!name) { document.querySelector('.dce-name').focus(); return }
       const saveBtn = document.getElementById('btn-detail-cust-save')
       saveBtn.disabled = true
       saveBtn.textContent = 'Saving…'
-      await db.from('customers').update({ name, address: addr, phone }).eq('id', customer.id)
+      await db.from('customers').update({ name, address: addr, phone, email }).eq('id', customer.id)
       editingDetailCustomer = false
       await loadData()
       renderSummary()
@@ -301,7 +303,10 @@ function openDetail(customer) {
   } else {
     document.getElementById('detail-name').innerHTML =
       `${esc(customer.name)} <button class="btn-ghost btn-edit-detail-cust">✎ Edit</button>`
-    document.getElementById('detail-address').textContent = customer.address || '—'
+    const contactLines = [customer.address || '—']
+    if (customer.phone) contactLines.push(customer.phone)
+    if (customer.email) contactLines.push(customer.email)
+    document.getElementById('detail-address').textContent = contactLines.join(' · ')
 
     document.querySelector('.btn-edit-detail-cust').addEventListener('click', () => {
       editingDetailCustomer = true
